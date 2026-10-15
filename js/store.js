@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'hepa_nutrition_v1';
+const HTPA_KEY = 'htpa_training_v1';
 
 function defaultData() {
   return { entries: [], targets: [] };
@@ -42,10 +43,6 @@ function quantityGrams(quantity) {
     : quantity.servings * quantity.gramsPerServing;
 }
 
-// Pure function: derives the actual nutrients for an entry from its
-// immutable base/quantity (OFF entries) or returns the stored totals as-is
-// (manual entries). Never mutates, never caches — callers always get a
-// fresh, correct value even right after `updateEntryQuantity`.
 function deriveNutrients(entry) {
   if (entry.source === 'manual') {
     return entry.nutrients;
@@ -60,6 +57,66 @@ function deriveNutrients(entry) {
     fiber: b.fiber == null ? null : round1(b.fiber * factor),
     sugar: b.sugar == null ? null : round1(b.sugar * factor)
   };
+}
+
+function sumNutrients(entries) {
+  const totals = { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0 };
+  let hasFiber = false;
+  let hasSugar = false;
+  for (const e of entries) {
+    const n = deriveNutrients(e);
+    totals.calories += n.calories;
+    totals.protein += n.protein;
+    totals.carbs += n.carbs;
+    totals.fat += n.fat;
+    if (n.fiber != null) { totals.fiber += n.fiber; hasFiber = true; }
+    if (n.sugar != null) { totals.sugar += n.sugar; hasSugar = true; }
+  }
+  return {
+    calories: round1(totals.calories),
+    protein: round1(totals.protein),
+    carbs: round1(totals.carbs),
+    fat: round1(totals.fat),
+    fiber: hasFiber ? round1(totals.fiber) : null,
+    sugar: hasSugar ? round1(totals.sugar) : null
+  };
+}
+
+function averageNutrients(totalsList) {
+  const n = totalsList.length;
+  const sums = { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0 };
+  let fiberCount = 0;
+  let sugarCount = 0;
+  for (const t of totalsList) {
+    sums.calories += t.calories;
+    sums.protein += t.protein;
+    sums.carbs += t.carbs;
+    sums.fat += t.fat;
+    if (t.fiber != null) { sums.fiber += t.fiber; fiberCount++; }
+    if (t.sugar != null) { sums.sugar += t.sugar; sugarCount++; }
+  }
+  return {
+    calories: round1(sums.calories / n),
+    protein: round1(sums.protein / n),
+    carbs: round1(sums.carbs / n),
+    fat: round1(sums.fat / n),
+    fiber: fiberCount ? round1(sums.fiber / fiberCount) : null,
+    sugar: sugarCount ? round1(sums.sugar / sugarCount) : null
+  };
+}
+
+// ISO-8601 week key, e.g. "2026-W42". Standard ISO week algorithm: shift to
+// the Thursday of the same week (ISO weeks belong to the year containing
+// their Thursday), then compare to that year's first Thursday.
+export function isoWeekKey(dateStr) {
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  const dayNum = (d.getUTCDay() + 6) % 7; // Mon=0..Sun=6
+  d.setUTCDate(d.getUTCDate() - dayNum + 3);
+  const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+  const firstThursdayDayNum = (firstThursday.getUTCDay() + 6) % 7;
+  firstThursday.setUTCDate(firstThursday.getUTCDate() - firstThursdayDayNum + 3);
+  const weekNum = 1 + Math.round((d - firstThursday) / (7 * 86400000));
+  return `${d.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`;
 }
 
 export const Store = {
@@ -142,5 +199,84 @@ export const Store = {
       if (t.effectiveFrom <= date) active = t;
     }
     return active;
+  },
+
+  getDailyTotals() {
+    const byDate = new Map();
+    for (const e of this.data.entries) {
+      if (!byDate.has(e.date)) byDate.set(e.date, []);
+      byDate.get(e.date).push(e);
+    }
+    return [...byDate.entries()]
+      .map(([date, entries]) => ({ date, totals: sumNutrients(entries) }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  },
+
+  getWeeklyAverages() {
+    const daily = this.getDailyTotals();
+    const byWeek = new Map();
+    for (const { date, totals } of daily) {
+      const week = isoWeekKey(date);
+      if (!byWeek.has(week)) byWeek.set(week, []);
+      byWeek.get(week).push(totals);
+    }
+    return [...byWeek.entries()]
+      .map(([week, totalsList]) => ({ week, totals: averageNutrients(totalsList) }))
+      .sort((a, b) => a.week.localeCompare(b.week));
+  },
+
+  getGoalStreak(windowDays) {
+    const dailyByDate = new Map(this.getDailyTotals().map((d) => [d.date, d.totals]));
+    let onTarget = 0;
+    let counted = 0;
+    const today = new Date();
+    for (let i = 0; i < windowDays; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
+      const target = this.getTargetForDate(dateStr);
+      if (!target || target.calories == null) continue;
+      const totals = dailyByDate.get(dateStr);
+      if (!totals) continue;
+      counted++;
+      if (totals.calories <= target.calories) onTarget++;
+    }
+    return { onTarget, counted };
+  },
+
+  getRecentFrequentFoods(limit) {
+    const counts = new Map();
+    const mostRecent = new Map();
+    for (const e of this.data.entries) {
+      const key = e.source === 'off' ? `off:${e.offId}` : `manual:${e.name.trim().toLowerCase()}`;
+      counts.set(key, (counts.get(key) || 0) + 1);
+      const existing = mostRecent.get(key);
+      if (!existing || e.loggedAt > existing.loggedAt) {
+        mostRecent.set(key, e);
+      }
+    }
+    return [...mostRecent.entries()]
+      .map(([key, entry]) => ({ key, entry, count: counts.get(key), lastLoggedAt: entry.loggedAt }))
+      .sort((a, b) => {
+        if (b.count !== a.count) return b.count - a.count;
+        return b.lastLoggedAt.localeCompare(a.lastLoggedAt);
+      })
+      .slice(0, limit)
+      .map((g) => g.entry);
+  },
+
+  getHtpaBodyweightPoints() {
+    try {
+      const raw = localStorage.getItem(HTPA_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed.bodyweight)) return [];
+      return parsed.bodyweight
+        .filter((b) => b && typeof b.date === 'string' && typeof b.weight === 'number')
+        .map((b) => ({ date: b.date, weight: b.weight }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+    } catch (e) {
+      return [];
+    }
   }
 };
