@@ -153,3 +153,8 @@ h3 {
   margin: 16px 0 8px;
   color: #a0a0b0;
 }
+
+.current-target {
+  color: #a0a0b0;
+  margin-bottom: 12px;
+}
