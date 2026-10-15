@@ -1,0 +1,35 @@
+:root {
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #1a1a2e;
+  color: #f5f5f7;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  height: 100%;
+}
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+input, select, button {
+  font-size: 1rem;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #44446a;
+  background: #22223b;
+  color: #f5f5f7;
+}
+button {
+  cursor: pointer;
+  background: #2d2d44;
+}
+button.save-btn, button.active {
+  background: #4f6df5;
+  border-color: #4f6df5;
+}
+h2 { font-size: 1.2rem; margin: 12px 0 8px; }
+.empty-hint { color: #a0a0b0; padding: 16px; text-align: center; }
