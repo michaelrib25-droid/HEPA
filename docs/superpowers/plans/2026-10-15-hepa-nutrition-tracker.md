@@ -2400,3 +2400,4 @@ git push
 ```
 
 Confirm on GitHub (`https://github.com/michaelrib25-droid/HEPA/commits/main`) that the pre-commit-hook commit and its auto-bumped `service-worker.js` are both present. From now on, any future "commit and push an update" request exercises this same hook automatically — no manual `CACHE_NAME` editing needed, and the installed app on the phone picks up the change on its next open via Chrome's background service-worker check.
+<!-- test -->
