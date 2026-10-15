@@ -158,6 +158,14 @@ h3 {
   color: #a0a0b0;
   margin-bottom: 12px;
 }
+.field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: #a0a0b0;
+  margin-bottom: 10px;
+}
 
 .tab-nav {
   display: flex;

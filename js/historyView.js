@@ -78,12 +78,10 @@ function renderEditForm(entriesContainer, entry, rootContainer) {
   entriesContainer.innerHTML = '';
 
   if (entry.source === 'off') {
-    const gramsInput = document.createElement('input');
-    gramsInput.type = 'number';
-    gramsInput.value = entry.quantity.mode === 'grams'
+    const [gramsField, gramsInput] = makeField('Grams', entry.quantity.mode === 'grams'
       ? entry.quantity.grams
-      : entry.quantity.servings * entry.quantity.gramsPerServing;
-    entriesContainer.appendChild(gramsInput);
+      : entry.quantity.servings * entry.quantity.gramsPerServing, 'number');
+    entriesContainer.appendChild(gramsField);
 
     const saveBtn = document.createElement('button');
     saveBtn.className = 'save-btn';
@@ -94,22 +92,12 @@ function renderEditForm(entriesContainer, entry, rootContainer) {
     });
     entriesContainer.appendChild(saveBtn);
   } else {
-    const nameInput = document.createElement('input');
-    nameInput.type = 'text';
-    nameInput.value = entry.name;
-    const calInput = document.createElement('input');
-    calInput.type = 'number';
-    calInput.value = entry.nutrients.calories;
-    const proteinInput = document.createElement('input');
-    proteinInput.type = 'number';
-    proteinInput.value = entry.nutrients.protein;
-    const carbsInput = document.createElement('input');
-    carbsInput.type = 'number';
-    carbsInput.value = entry.nutrients.carbs;
-    const fatInput = document.createElement('input');
-    fatInput.type = 'number';
-    fatInput.value = entry.nutrients.fat;
-    [nameInput, calInput, proteinInput, carbsInput, fatInput].forEach((i) => entriesContainer.appendChild(i));
+    const [nameField, nameInput] = makeField('Name', entry.name, 'text');
+    const [calField, calInput] = makeField('Calories', entry.nutrients.calories, 'number');
+    const [proteinField, proteinInput] = makeField('Protein (g)', entry.nutrients.protein, 'number');
+    const [carbsField, carbsInput] = makeField('Carbs (g)', entry.nutrients.carbs, 'number');
+    const [fatField, fatInput] = makeField('Fat (g)', entry.nutrients.fat, 'number');
+    [nameField, calField, proteinField, carbsField, fatField].forEach((f) => entriesContainer.appendChild(f));
 
     const saveBtn = document.createElement('button');
     saveBtn.className = 'save-btn';
@@ -133,4 +121,17 @@ function renderEditForm(entriesContainer, entry, rootContainer) {
   cancelBtn.textContent = 'Cancel';
   cancelBtn.addEventListener('click', () => renderHistoryView(rootContainer));
   entriesContainer.appendChild(cancelBtn);
+}
+
+function makeField(labelText, value, type) {
+  const label = document.createElement('label');
+  label.className = 'field-label';
+  const caption = document.createElement('span');
+  caption.textContent = labelText;
+  const input = document.createElement('input');
+  input.type = type;
+  input.value = value;
+  label.appendChild(caption);
+  label.appendChild(input);
+  return [label, input];
 }

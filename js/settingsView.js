@@ -27,11 +27,11 @@ export function renderSettingsView(container) {
   }
   container.appendChild(currentText);
 
-  const calInput = makeField('Calories (optional)', current ? current.calories : null);
-  const proteinInput = makeField('Protein g (optional)', current ? current.protein : null);
-  const carbsInput = makeField('Carbs g (optional)', current ? current.carbs : null);
-  const fatInput = makeField('Fat g (optional)', current ? current.fat : null);
-  [calInput, proteinInput, carbsInput, fatInput].forEach((i) => container.appendChild(i));
+  const [calField, calInput] = makeField('Calories (optional)', current ? current.calories : null);
+  const [proteinField, proteinInput] = makeField('Protein g (optional)', current ? current.protein : null);
+  const [carbsField, carbsInput] = makeField('Carbs g (optional)', current ? current.carbs : null);
+  const [fatField, fatInput] = makeField('Fat g (optional)', current ? current.fat : null);
+  [calField, proteinField, carbsField, fatField].forEach((f) => container.appendChild(f));
 
   const saveBtn = document.createElement('button');
   saveBtn.className = 'save-btn';
@@ -48,11 +48,16 @@ export function renderSettingsView(container) {
   container.appendChild(saveBtn);
 }
 
-function makeField(placeholder, value) {
+function makeField(labelText, value) {
+  const label = document.createElement('label');
+  label.className = 'field-label';
+  const caption = document.createElement('span');
+  caption.textContent = labelText;
   const input = document.createElement('input');
   input.type = 'number';
   input.step = 'any';
-  input.placeholder = placeholder;
   input.value = value == null ? '' : value;
-  return input;
+  label.appendChild(caption);
+  label.appendChild(input);
+  return [label, input];
 }
