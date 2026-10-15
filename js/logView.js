@@ -15,6 +15,21 @@ function renderBrowse(container) {
   title.textContent = 'Log Food';
   container.appendChild(title);
 
+  const today = todayIso();
+  const todayTotals = Store.getDailyTotals().find((d) => d.date === today)?.totals;
+  const todayTarget = Store.getTargetForDate(today);
+  const progress = document.createElement('p');
+  progress.className = 'today-progress';
+  if (todayTotals) {
+    const cal = Math.round(todayTotals.calories);
+    progress.textContent = todayTarget?.calories != null
+      ? `Today: ${cal} / ${todayTarget.calories} kcal`
+      : `Today: ${cal} kcal`;
+  } else {
+    progress.textContent = 'Nothing logged today yet.';
+  }
+  container.appendChild(progress);
+
   const recent = Store.getRecentFrequentFoods(6);
   const recentSection = document.createElement('div');
   recentSection.className = 'recent-foods';
