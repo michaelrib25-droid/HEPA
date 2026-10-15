@@ -1,8 +1,16 @@
 const SEARCH_URL = 'https://world.openfoodfacts.org/cgi/search.pl';
+const TIMEOUT_MS = 8000;
 
 export async function searchFoods(query) {
   const url = `${SEARCH_URL}?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20`;
-  const res = await fetch(url);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  let res;
+  try {
+    res = await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
   if (!res.ok) {
     throw new Error(`Open Food Facts request failed: ${res.status}`);
   }
