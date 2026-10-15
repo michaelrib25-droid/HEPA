@@ -116,3 +116,25 @@ h2 { font-size: 1.2rem; margin: 12px 0 8px; }
   color: #ff6b6b;
   font-size: 0.85rem;
 }
+
+.day-block {
+  margin-bottom: 8px;
+}
+.day-header {
+  width: 100%;
+  text-align: left;
+  background: #22223b;
+}
+.day-entries {
+  padding: 8px 4px;
+}
+.entry-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid #333358;
+}
+.entry-row span {
+  flex: 1;
+}
