@@ -33,3 +33,86 @@ button.save-btn, button.active {
 }
 h2 { font-size: 1.2rem; margin: 12px 0 8px; }
 .empty-hint { color: #a0a0b0; padding: 16px; text-align: center; }
+
+.trend-chart-svg {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  background: #22223b;
+  border-radius: 8px;
+}
+.trend-chart-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #a0a0b0;
+  max-width: 400px;
+  padding: 2px 4px;
+}
+.trend-chart-legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: #a0a0b0;
+  max-width: 400px;
+  padding: 4px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.log-view, .history-view, .trends-view, .settings-view {
+  padding: 12px;
+  flex: 1;
+}
+.recent-foods-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.recent-chip {
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+}
+.food-search-input {
+  width: 100%;
+  margin-bottom: 8px;
+}
+.search-result-row {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 6px;
+}
+.manual-link {
+  background: none;
+  border: none;
+  color: #a0a0b0;
+  text-decoration: underline;
+  margin-top: 12px;
+}
+.serving-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
+}
+.nutrient-preview {
+  color: #a0a0b0;
+  margin: 8px 0;
+}
+.log-error {
+  color: #ff6b6b;
+  font-size: 0.85rem;
+}
