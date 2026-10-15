@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hepa-hello-world-v1';
+const CACHE_NAME = 'hepa-hello-world-v2';
 const ASSETS = [
   './',
   './index.html',
