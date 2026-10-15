@@ -1,4 +1,4 @@
-import { Store } from './store.js';
+import { Store, todayIso } from './store.js';
 import { searchFoods } from './foodSearch.js';
 
 let searchDebounceTimer = null;
@@ -289,8 +289,4 @@ function makeField(type, placeholder, value) {
   if (type === 'number') input.step = 'any';
   input.value = value;
   return input;
-}
-
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
 }

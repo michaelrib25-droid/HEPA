@@ -29,8 +29,11 @@ function save(data) {
   }
 }
 
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
+// Local-calendar-day date string (not UTC) — a UTC slice would misdate
+// entries logged late at night in timezones ahead of UTC (e.g. a 00:30
+// local entry in Europe/Berlin is still 22:30 UTC the previous day).
+export function todayIso(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 function round1(n) {
@@ -233,7 +236,7 @@ export const Store = {
     for (let i = 0; i < windowDays; i++) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().slice(0, 10);
+      const dateStr = todayIso(d);
       const target = this.getTargetForDate(dateStr);
       if (!target || target.calories == null) continue;
       const totals = dailyByDate.get(dateStr);
