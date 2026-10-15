@@ -1,0 +1,20 @@
+#!/bin/sh
+# Auto-bump the service worker cache name whenever an app file changes,
+# so GitHub Pages redeploys always invalidate the installed PWA's cache.
+
+changed=$(git diff --cached --name-only --diff-filter=ACMR)
+
+touches_app=false
+for f in $changed; do
+  case "$f" in
+    service-worker.js|.githooks/*|docs/*) ;;
+    *) touches_app=true ;;
+  esac
+done
+
+if [ "$touches_app" = "true" ]; then
+  version=$(date -u +%Y%m%d%H%M%S)
+  sed -i.bak "s/const CACHE_NAME = '[^']*';/const CACHE_NAME = 'hepa-v$version';/" service-worker.js
+  rm -f service-worker.js.bak
+  git add service-worker.js
+fi
