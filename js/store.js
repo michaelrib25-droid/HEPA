@@ -141,6 +141,22 @@ export const Store = {
     return entry;
   },
 
+  addFdcEntry(date, name, fdcId, base, quantity) {
+    const entry = {
+      id: genId('entry'),
+      date,
+      loggedAt: new Date().toISOString(),
+      name,
+      source: 'fdc',
+      fdcId,
+      base,
+      quantity
+    };
+    this.data.entries.push(entry);
+    save(this.data);
+    return entry;
+  },
+
   addManualEntry(date, name, nutrients) {
     const entry = {
       id: genId('entry'),
@@ -157,7 +173,7 @@ export const Store = {
 
   updateEntryQuantity(id, quantity) {
     const entry = this.data.entries.find((e) => e.id === id);
-    if (!entry || entry.source !== 'off') return;
+    if (!entry || entry.source === 'manual') return;
     entry.quantity = quantity;
     save(this.data);
   },
@@ -251,7 +267,9 @@ export const Store = {
     const counts = new Map();
     const mostRecent = new Map();
     for (const e of this.data.entries) {
-      const key = e.source === 'off' ? `off:${e.offId}` : `manual:${e.name.trim().toLowerCase()}`;
+      const key = e.source === 'manual'
+        ? `manual:${e.name.trim().toLowerCase()}`
+        : `${e.source}:${e.source === 'off' ? e.offId : e.fdcId}`;
       counts.set(key, (counts.get(key) || 0) + 1);
       const existing = mostRecent.get(key);
       if (!existing || e.loggedAt > existing.loggedAt) {
