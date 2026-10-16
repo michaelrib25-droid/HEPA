@@ -1,8 +1,10 @@
 const SEARCH_URL = 'https://world.openfoodfacts.org/cgi/search.pl';
 const TIMEOUT_MS = 8000;
 
+const RESULT_LIMIT = 8;
+
 export async function searchFoods(query) {
-  const url = `${SEARCH_URL}?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=20`;
+  const url = `${SEARCH_URL}?search_terms=${encodeURIComponent(query)}&search_simple=1&action=process&json=1&page_size=${RESULT_LIMIT}&sort_by=unique_scans_n&lc=en`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   let res;
