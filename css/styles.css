@@ -102,6 +102,18 @@ h2 { font-size: 1.2rem; margin: 12px 0 8px; }
   text-decoration: underline;
   margin-top: 12px;
 }
+.scan-btn {
+  width: 100%;
+  margin-bottom: 12px;
+}
+.barcode-video {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 8px;
+  background: #000;
+  margin-bottom: 8px;
+  display: block;
+}
 .serving-row {
   display: flex;
   gap: 8px;
