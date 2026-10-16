@@ -9,10 +9,12 @@ HEPA: a local, offline-capable PWA for a single Android phone that logs food int
 Primarily meant to surface long-term eating trends (daily/weekly patterns, goal
 adherence, correlation with the sibling HTPA project's bodyweight log) — day-to-day
 visibility matters but is secondary to trends/history. Single-user, no backend beyond
-the public Open Food Facts API, no cloud sync of its own data. Vanilla JS, no framework,
-no build step.
+public food-lookup APIs (USDA FoodData Central for text search, Open Food Facts for
+barcode lookup), no cloud sync of its own data. Vanilla JS, no framework, no build step.
 
-Full design spec: `docs/superpowers/specs/2026-10-15-hepa-nutrition-tracker-design.md`.
+Full design spec: `docs/superpowers/specs/2026-10-15-hepa-nutrition-tracker-design.md`,
+superseded in part by `docs/superpowers/specs/2026-10-16-fdc-search-barcode-scan-design.md`
+(food search moved from Open Food Facts to USDA FDC; barcode lookup added).
 
 ## Commands
 
@@ -45,13 +47,15 @@ Strict layering, same discipline as HTPA/HNSA: `store.js` is the only module tou
 `Store`, never to storage directly.
 
 **The one architectural departure from HTPA/HNSA's fully-offline pattern:**
-`foodSearch.js` makes live network calls to the Open Food Facts API during food search.
-Nothing else in the app depends on network — OFF search failing (offline, timeout, no
-results) must degrade to an inline message while the manual-entry fallback stays fully
-usable. Don't let a network dependency leak into logging, history, or trends.
+`fdcSearch.js` (USDA FoodData Central text search), `barcodeLookup.js` (Open Food
+Facts barcode-by-code lookup), and `barcodeScanner.js` (camera + `BarcodeDetector`)
+make the only live network/camera calls in the app. Nothing else depends on network —
+a search or barcode-lookup failure (offline, timeout, barcode not recognized) must
+degrade to an inline message while the manual-entry fallback stays fully usable. Don't
+let a network dependency leak into logging, history, or trends.
 
 Data model nuances that drive a lot of the logic (`js/store.js`):
-- Entries have two shapes depending on `source`:
+- Entries have three shapes depending on `source`:
   - `source: "off"` entries store `base` (nutrients **per 100g**, an immutable snapshot
     from the OFF lookup, never re-fetched/updated after logging) + `quantity`
     (`{mode:"grams", grams}` or `{mode:"serving", servings, gramsPerServing, label}`).
@@ -59,6 +63,11 @@ Data model nuances that drive a lot of the logic (`js/store.js`):
     `getEntryNutrients()` (`base × quantity`), the same derive-at-read-time philosophy
     HTPA uses for PRs. This makes correcting a logged portion a one-field edit instead of
     a recompute-and-overwrite.
+  - `source: "fdc"` entries are structurally identical to `source: "off"` ones — a
+    per-100g `base` snapshot (this time from USDA FoodData Central) + `quantity` —
+    just with an `fdcId` instead of an `offId`. Anywhere code branches on
+    `source === 'off'` to mean "has `base`/`quantity` to scale", it should treat
+    `'off'` and `'fdc'` alike; the real distinction is against `'manual'`.
   - `source: "manual"` entries store absolute `nutrients` totals directly — no
     `base`/`quantity`, nothing to scale.
   - Don't conflate the two shapes; always branch on `source` before reading nutrients.

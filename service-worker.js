@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hepa-v20261016135311';
+const CACHE_NAME = 'hepa-v20261016135512';
 const ASSETS = [
   './',
   './index.html',
@@ -6,7 +6,10 @@ const ASSETS = [
   './css/styles.css',
   './js/app.js',
   './js/store.js',
-  './js/foodSearch.js',
+  './js/httpRetry.js',
+  './js/fdcSearch.js',
+  './js/barcodeLookup.js',
+  './js/barcodeScanner.js',
   './js/chart.js',
   './js/logView.js',
   './js/historyView.js',
