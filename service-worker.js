@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hepa-v20261015185442';
+const CACHE_NAME = 'hepa-v20261016084616';
 const ASSETS = [
   './',
   './index.html',
