@@ -5,11 +5,33 @@ import { isBarcodeDetectionSupported, startScanning } from './barcodeScanner.js'
 
 let searchDebounceTimer = null;
 
+// Holds the live camera's stop() function (or a cancellation flag while
+// startScanning() is still awaiting getUserMedia) so the stream can be
+// released from outside renderBarcodeScan — on Cancel, on navigating to a
+// result/fallback screen, or when app.js switches tabs away from Log
+// entirely. Without this, nothing ever calls MediaStreamTrack.stop() in
+// those paths and the camera stays powered on.
+let activeScanStop = null;
+
+function stopActiveScan() {
+  if (activeScanStop) {
+    activeScanStop();
+    activeScanStop = null;
+  }
+}
+
 export function renderLogView(container) {
   renderBrowse(container);
 }
 
+// Called by app.js before it tears down the view container for any tab
+// switch, so a live camera scan never outlives the Log tab being visible.
+export function teardownLogView() {
+  stopActiveScan();
+}
+
 function renderBrowse(container) {
+  stopActiveScan();
   container.innerHTML = '';
   container.className = 'log-view';
 
@@ -139,8 +161,6 @@ function renderBarcodeScan(container) {
   statusMsg.className = 'empty-hint';
   container.appendChild(statusMsg);
 
-  let stopScanning = () => {};
-
   if (isBarcodeDetectionSupported()) {
     const video = document.createElement('video');
     video.className = 'barcode-video';
@@ -148,14 +168,30 @@ function renderBarcodeScan(container) {
     video.muted = true;
     container.appendChild(video);
 
+    // startScanning() is async (it awaits a camera-permission prompt before
+    // resolving its stop() function) — if the user cancels or navigates
+    // away before it resolves, `cancelled` makes the eventual stop() call
+    // itself immediately instead of being silently lost, so the camera
+    // still gets released even when Cancel is tapped mid-prompt.
+    let cancelled = false;
+    activeScanStop = () => { cancelled = true; };
+
     statusMsg.textContent = 'Point the camera at a barcode…';
     startScanning(
       video,
       // barcodeScanner.js already stops the camera internally before
-      // calling onDetected, so no need to call stopScanning() here too.
+      // calling onDetected, so no need to call stopActiveScan() here too.
       (barcode) => handleBarcode(container, barcode),
       () => { statusMsg.textContent = 'Camera unavailable — enter the barcode manually below.'; }
-    ).then((stop) => { stopScanning = stop; });
+    ).then((stop) => {
+      if (cancelled) { stop(); return; }
+      activeScanStop = stop;
+    }).catch(() => {
+      // videoEl.play() rejecting or `new BarcodeDetector()` throwing after
+      // the camera stream already opened — same fallback as a permission
+      // denial, so this never leaves a dead-end screen.
+      if (!cancelled) statusMsg.textContent = 'Camera unavailable — enter the barcode manually below.';
+    });
   } else {
     statusMsg.textContent = "Camera scanning isn't supported on this browser — enter the barcode manually below.";
   }
@@ -173,7 +209,7 @@ function renderBarcodeScan(container) {
   manualBtn.addEventListener('click', () => {
     const code = manualInput.value.trim();
     if (code) {
-      stopScanning();
+      stopActiveScan();
       handleBarcode(container, code);
     }
   });
@@ -184,7 +220,7 @@ function renderBarcodeScan(container) {
   cancelBtn.type = 'button';
   cancelBtn.textContent = 'Cancel';
   cancelBtn.addEventListener('click', () => {
-    stopScanning();
+    stopActiveScan();
     renderBrowse(container);
   });
   container.appendChild(cancelBtn);

@@ -4,10 +4,18 @@ const PRODUCT_URL = 'https://world.openfoodfacts.org/api/v2/product';
 
 export async function lookupBarcode(barcode) {
   const url = `${PRODUCT_URL}/${encodeURIComponent(barcode)}.json`;
-  const res = await fetchWithRetry(url, { label: 'Barcode lookup' });
+  let res;
+  try {
+    res = await fetchWithRetry(url, { label: 'Barcode lookup' });
+  } catch (e) {
+    // OFF signals "barcode not found" inconsistently: a malformed/degenerate
+    // code (e.g. all zeros) gets HTTP 200 with status:0, but a well-formed
+    // code OFF has simply never catalogued gets HTTP 404 (also status:0 in
+    // the body) — both mean "not found", not "network/server failure".
+    if (e.status === 404) return null;
+    throw e;
+  }
   const data = await res.json();
-  // OFF returns HTTP 200 even for an unrecognized barcode — "not found" is
-  // signaled by status !== 1 in the JSON body, never by the HTTP status.
   if (data.status !== 1 || !data.product || data.product.nutriments?.['energy-kcal_100g'] == null) {
     return null;
   }

@@ -19,14 +19,43 @@ const NUTRIENT_ID_MAP = {
 };
 
 export async function searchFoods(query) {
-  const url = `${SEARCH_URL}?api_key=${API_KEY}&query=${encodeURIComponent(query)}&pageSize=${RESULT_LIMIT}`;
+  // FDC's relevance ranking is dominated by Branded products for most staple
+  // queries — some (e.g. "whole milk") surface zero generic entries even
+  // within the top 200 relevance-ranked results, so widening a single
+  // request's pageSize can't reliably find them. A second request scoped to
+  // just the generic dataTypes guarantees they're found when they exist,
+  // run in parallel with the normal (mostly-Branded) request so a query
+  // with no generic match still gets a full Branded result list.
+  const [genericFoods, allFoods] = await Promise.all([
+    fetchFoods(query, GENERIC_DATA_TYPES),
+    fetchFoods(query, null)
+  ]);
+
+  const seen = new Set();
+  const combined = [];
+  for (const f of [...genericFoods, ...allFoods]) {
+    if (seen.has(f.fdcId)) continue;
+    seen.add(f.fdcId);
+    combined.push(f);
+  }
+  return combined
+    .sort((a, b) => genericRank(a.dataType) - genericRank(b.dataType))
+    .slice(0, RESULT_LIMIT);
+}
+
+async function fetchFoods(query, dataTypes) {
+  const params = new URLSearchParams();
+  params.set('api_key', API_KEY);
+  params.set('query', query);
+  params.set('pageSize', String(RESULT_LIMIT));
+  if (dataTypes) {
+    for (const dt of dataTypes) params.append('dataType', dt);
+  }
+  const url = `${SEARCH_URL}?${params.toString()}`;
   const res = await fetchWithRetry(url, { label: 'FDC search' });
   const data = await res.json();
   const foods = Array.isArray(data.foods) ? data.foods : [];
-  return foods
-    .map(normalizeFood)
-    .filter((f) => f !== null)
-    .sort((a, b) => genericRank(a.dataType) - genericRank(b.dataType));
+  return foods.map(normalizeFood).filter((f) => f !== null);
 }
 
 function genericRank(dataType) {
@@ -37,9 +66,11 @@ function genericRank(dataType) {
 function normalizeFood(f) {
   const n = extractNutrients(f.foodNutrients);
   if (n.calories == null) return null;
+  const description = f.description || 'Unknown food';
+  const brand = f.brandName || f.brandOwner;
   return {
     fdcId: f.fdcId,
-    name: f.description,
+    name: brand ? `${description} (${brand})` : description,
     dataType: f.dataType,
     base: {
       calories: n.calories,

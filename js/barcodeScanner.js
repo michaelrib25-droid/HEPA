@@ -13,10 +13,19 @@ export async function startScanning(videoEl, onDetected, onError) {
     return () => {};
   }
 
-  videoEl.srcObject = stream;
-  await videoEl.play();
+  let detector;
+  try {
+    videoEl.srcObject = stream;
+    await videoEl.play();
+    detector = new BarcodeDetector({ formats: BARCODE_FORMATS });
+  } catch (e) {
+    // The stream opened successfully but something after it failed — without
+    // this, the camera stays on with no stop() ever handed back to release it.
+    stream.getTracks().forEach((t) => t.stop());
+    onError(e);
+    return () => {};
+  }
 
-  const detector = new BarcodeDetector({ formats: BARCODE_FORMATS });
   let stopped = false;
   let rafId = null;
 

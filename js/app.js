@@ -1,4 +1,4 @@
-import { renderLogView } from './logView.js';
+import { renderLogView, teardownLogView } from './logView.js';
 import { renderHistoryView } from './historyView.js';
 import { renderTrendsView } from './trendsView.js';
 import { renderSettingsView } from './settingsView.js';
@@ -15,6 +15,10 @@ const TABS = [
 let activeTab = 'log';
 
 function render() {
+  // Safe to call unconditionally (a no-op unless the Log tab has a live
+  // camera scan in progress) — releases the camera before the view
+  // container it's attached to gets wiped out below.
+  teardownLogView();
   appRoot.innerHTML = '';
 
   const nav = document.createElement('nav');
