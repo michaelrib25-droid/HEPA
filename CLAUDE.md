@@ -5,7 +5,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 HEPA: a local, offline-capable PWA for a single Android phone that logs food intake
-(calories, protein/carbs/fat/fiber/sugar) via Open Food Facts lookup or manual entry.
+(calories, protein/carbs/fat/fiber/sugar) via USDA FoodData Central text search, Open
+Food Facts barcode lookup, or manual entry.
 Primarily meant to surface long-term eating trends (daily/weekly patterns, goal
 adherence, correlation with the sibling HTPA project's bodyweight log) — day-to-day
 visibility matters but is secondary to trends/history. Single-user, no backend beyond
@@ -70,7 +71,7 @@ Data model nuances that drive a lot of the logic (`js/store.js`):
     `'off'` and `'fdc'` alike; the real distinction is against `'manual'`.
   - `source: "manual"` entries store absolute `nutrients` totals directly — no
     `base`/`quantity`, nothing to scale.
-  - Don't conflate the two shapes; always branch on `source` before reading nutrients.
+  - Don't conflate the three shapes; always branch on `source` before reading nutrients.
 - `targets` is a **changelog, not a single mutable value** — editing targets in Settings
   appends a new `{ effectiveFrom, calories, protein, carbs, fat }` entry rather than
   mutating the previous one. "The target active for date D" = the entry with the latest
