@@ -77,7 +77,7 @@ function renderDayEntries(entriesContainer, date, rootContainer) {
 function renderEditForm(entriesContainer, entry, rootContainer) {
   entriesContainer.innerHTML = '';
 
-  if (entry.source === 'off') {
+  if (entry.source !== 'manual') {
     const [gramsField, gramsInput] = makeField('Grams', entry.quantity.mode === 'grams'
       ? entry.quantity.grams
       : entry.quantity.servings * entry.quantity.gramsPerServing, 'number');
