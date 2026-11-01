@@ -1,7 +1,12 @@
 :root {
   color-scheme: dark;
+  --accent: #4f6df5;
+  --accent-2: #2dd4bf;
 }
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
 html, body {
   margin: 0;
   padding: 0;
@@ -26,10 +31,25 @@ input, select, button {
 button {
   cursor: pointer;
   background: #2d2d44;
+  outline: none;
+}
+button,
+.recent-chip,
+.search-result-row,
+.entry-row,
+.day-header {
+  transition: transform 100ms ease, filter 100ms ease;
+}
+button:active,
+.recent-chip:active,
+.search-result-row:active,
+.day-header:active {
+  transform: scale(0.96);
+  filter: brightness(0.88);
 }
 button.save-btn, button.active {
-  background: #4f6df5;
-  border-color: #4f6df5;
+  background: var(--accent);
+  border-color: var(--accent);
 }
 h2 { font-size: 1.2rem; margin: 12px 0 8px; }
 .empty-hint { color: #a0a0b0; padding: 16px; text-align: center; }
@@ -40,6 +60,15 @@ h2 { font-size: 1.2rem; margin: 12px 0 8px; }
   height: auto;
   background: #22223b;
   border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+.trend-chart-grid-line {
+  stroke: #333358;
+  stroke-width: 1;
+}
+.trend-chart-axis-label {
+  fill: #6b6b85;
+  font-size: 7px;
 }
 .trend-chart-labels {
   display: flex;
@@ -84,6 +113,7 @@ h2 { font-size: 1.2rem; margin: 12px 0 8px; }
   border-radius: 999px;
   padding: 6px 14px;
   font-size: 0.85rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 .food-search-input {
   width: 100%;
@@ -94,6 +124,9 @@ h2 { font-size: 1.2rem; margin: 12px 0 8px; }
   width: 100%;
   text-align: left;
   margin-bottom: 6px;
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 .manual-link {
   background: none;
@@ -105,6 +138,7 @@ h2 { font-size: 1.2rem; margin: 12px 0 8px; }
 .scan-btn {
   width: 100%;
   margin-bottom: 12px;
+  border-radius: 10px;
 }
 .barcode-video {
   width: 100%;
@@ -136,6 +170,8 @@ h2 { font-size: 1.2rem; margin: 12px 0 8px; }
   width: 100%;
   text-align: left;
   background: #22223b;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 .day-entries {
   padding: 8px 4px;
@@ -144,8 +180,12 @@ h2 { font-size: 1.2rem; margin: 12px 0 8px; }
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 0;
-  border-bottom: 1px solid #333358;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  background: #22223b;
+  border-left: 4px solid var(--accent);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 .entry-row span {
   flex: 1;
@@ -185,24 +225,24 @@ h3 {
 
 .tab-nav {
   display: flex;
+  gap: 8px;
   background: #22223b;
-  border-bottom: 1px solid #333358;
+  padding: 10px 12px;
   overflow-x: auto;
 }
 .tab-nav button {
   flex: 1;
-  background: none;
+  background: #2d2d44;
   border: none;
-  border-radius: 0;
-  padding: 12px 6px;
+  border-radius: 8px;
+  padding: 8px 10px;
   font-size: 0.8rem;
   color: #a0a0b0;
   white-space: nowrap;
 }
 .tab-nav button.active {
-  color: #f5f5f7;
-  border-bottom: 2px solid #4f6df5;
-  background: none;
+  color: white;
+  background: var(--accent);
 }
 .view-container {
   flex: 1;

@@ -23,6 +23,41 @@ export function renderLineChart(container, series) {
   svg.setAttribute('viewBox', `0 0 ${WIDTH} ${HEIGHT}`);
   svg.setAttribute('class', 'trend-chart-svg');
 
+  const TICK_COUNT = 4;
+  const plotTop = PADDING;
+  const plotBottom = HEIGHT - PADDING;
+  const bandHeight = (plotBottom - plotTop) / TICK_COUNT;
+  for (let i = 0; i < TICK_COUNT; i++) {
+    if (i % 2 === 1) {
+      const band = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      band.setAttribute('x', PADDING);
+      band.setAttribute('y', plotTop + i * bandHeight);
+      band.setAttribute('width', WIDTH - PADDING * 2);
+      band.setAttribute('height', bandHeight);
+      band.setAttribute('fill', 'rgba(255, 255, 255, 0.03)');
+      svg.appendChild(band);
+    }
+  }
+  for (let i = 0; i <= TICK_COUNT; i++) {
+    const y = plotTop + i * bandHeight;
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', PADDING);
+    line.setAttribute('x2', WIDTH - PADDING);
+    line.setAttribute('y1', y);
+    line.setAttribute('y2', y);
+    line.setAttribute('class', 'trend-chart-grid-line');
+    svg.appendChild(line);
+
+    const tickValue = primaryRange.max - (i / TICK_COUNT) * primaryRange.span;
+    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    label.setAttribute('x', PADDING - 4);
+    label.setAttribute('y', y + 2);
+    label.setAttribute('text-anchor', 'end');
+    label.setAttribute('class', 'trend-chart-axis-label');
+    label.textContent = Math.round(tickValue);
+    svg.appendChild(label);
+  }
+
   series.forEach((s, idx) => {
     const color = s.color || DEFAULT_COLORS[idx % DEFAULT_COLORS.length];
     const range = s.axis === 'secondary' ? secondaryRange : primaryRange;
